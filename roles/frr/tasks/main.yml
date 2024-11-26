@@ -1,0 +1,45 @@
+- name: frr
+  tags:
+    - frr
+  block:
+    - name: copy frr key
+      ansible.builtin.copy:
+        src: frrouting.gpg
+        dest: /usr/share/keyrings/frrouting.gpg
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+    - name: add FRR repository
+      ansible.builtin.shell:
+        cmd: "echo deb '[signed-by=/usr/share/keyrings/frrouting.gpg]' https://deb.frrouting.org/frr $(lsb_release -s -c) {{ frr.version }} | sudo tee /etc/apt/sources.list.d/frr.list"
+    - name: update apt cache after adding FRR repository
+      apt:
+        update_cache: yes
+    - name: install FRR package
+      apt:
+        name: frr
+        state: present
+    - name: enable BGP
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: '^bgpd='
+        line: bgpd=yes
+      notify: restart FRR service
+    - name: verify FRR installation
+      command: vtysh -c "show version"
+      register: frr_output
+      failed_when: frr.version_long not in frr_output.stdout
+    - name: render frr configuration for overlay
+      ansible.builtin.template:
+         src: overlay.j2
+         dest: /etc/frr/frr.conf
+         trim_blocks: false
+      notify: restart FRR service
+      when: "'overlay' in group_names"
+    - name: render frr configuration for underlay
+      ansible.builtin.template:
+         src: underlay.j2
+         dest: /etc/frr/frr.conf
+         trim_blocks: false
+      notify: restart FRR service
+      when: "'underlay' in group_names"

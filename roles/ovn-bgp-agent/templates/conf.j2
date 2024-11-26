@@ -1,0 +1,76 @@
+[DEFAULT]
+# Verbose logging
+debug = True
+
+# Time (seconds) between re-sync actions.
+reconcile_interval = 30
+
+# Time (seconds) between re-sync actions to ensure frr configuration is correct.
+# NOTE: This function does not do anything in our setup, so this high interval is fine.
+frr_reconcile_interval = 86400
+
+# Expose VM IPs on tenant networks.
+expose_tenant_networks = True
+
+# The NB driver is capable of advertising the tenant networks either per
+# host or per subnet. So either per /32 or /128 or per subnet like /24.
+# Choose "host" as value for this option to advertise per host or choose
+# "subnet" to announce per subnet prefix.
+advertisement_method_tenant_networks = subnet
+
+# Require SNAT on the router port to be disabled before exposing the tenant
+# networks. Otherwise the exposed tenant networks will be reachable from the
+# outside, but the connections set up from within the tenant vm will always
+# be SNAT-ed by the router, thus be the router ip. When SNAT is disabled,
+# OVN will do pure routing without SNAT
+require_snat_disabled_for_tenant_networks = True
+
+# Expose only VM IPv6 IPs on tenant networks if they are GUA.
+# expose_ipv6_gua_tenant_networks = False
+
+# Driver to be used.
+driver = 'nb_ovn_bgp_driver'
+
+# The connection string for the native OVSDB backend.
+ovsdb_connection = unix:/var/run/openvswitch/db.sock
+#ovsdb_connection = tcp:127.0.0.1:6640
+
+# Timeout in seconds for the OVSDB connection transaction.
+# ovsdb_connection_timeout = 180
+
+# AS number to be used by the Agent when running in BGP mode.
+bgp_AS = {{ asn.host }}
+
+# Router ID to be used by the Agent when running in BGP mode.
+bgp_router_id = {{ bgp_ip }}
+
+# IP address of local EVPN VXLAN (tunnel) endpoint.
+evpn_local_ip = {{ bgp_ip }}
+
+# If enabled, all routes are removed from the VRF table at startup.
+clear_vrf_routes_on_startup = True
+
+# Allows to filter on the address scope (optional, comma separated list of uuids)
+# address_scopes = 11111111-1111-1111-1111-111111111111,22222222-2222-2222-2222-222222222222
+
+# The exposing mechanism to be used.
+exposing_method = 'vrf'
+bgp_vrf_table_id = {{ vrf.overlay.id }}
+
+# When using exposing_method vrf and l3 mode on networks, then one can create
+# anycast mac addresses, basically using the same mac address on all nodes for
+# use with routing.
+anycast_evpn_gateway_mode = True
+
+[ovn]
+# The connection string for the OVN_Northbound OVSDB.
+# Use tcp:IP:PORT for TCP connection.
+# Use unix:FILE for unix domain socket connection.
+ovn_nb_connection = ssl:{{ ovn.central.0 }}:6641,ssl:{{ ovn.central.1 }}:6641,ssl:{{ ovn.central.2 }}:6641
+ovn_sb_connection = ssl:{{ ovn.central.0 }}:6642,ssl:{{ ovn.central.1 }}:6642,ssl:{{ ovn.central.2 }}:6642
+ovn_nb_certificate = /etc/ovn/cert_host
+ovn_sb_certificate = /etc/ovn/cert_host
+ovn_nb_ca_cert = /etc/ovn/ovn-chassis.crt
+ovn_sb_ca_cert = /etc/ovn/ovn-chassis.crt
+ovn_nb_private_key = /etc/ovn/key_host
+ovn_sb_private_key = /etc/ovn/key_host

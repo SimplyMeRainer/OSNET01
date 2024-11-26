@@ -1,0 +1,36 @@
+- name: netplan
+  tags:
+    - netplan
+  block:
+    - name: add repo for netplan
+      ansible.builtin.apt_repository:
+        repo: deb http://archive.ubuntu.com/ubuntu/ jammy-proposed main
+        state: present
+        filename: cloud-archive
+    - name: install netplan
+      ansible.builtin.apt:
+        name: netplan.io
+        state: latest
+        update_cache: yes
+    - name: render netplan configuration for overlay
+      ansible.builtin.template:
+         src: overlay.j2
+         dest: /etc/netplan/50-cloud-init.yaml
+         trim_blocks: false
+      when: "'overlay' in group_names"
+    - name: render netplan configuration for underlay
+      ansible.builtin.template:
+         src: underlay.j2
+         dest: /etc/netplan/50-cloud-init.yaml
+         trim_blocks: false
+      when: "'underlay' in group_names"
+    - name: create conjob to run netplan on reboot
+      ansible.builtin.cron:
+        name: "run netplan on reboot"
+        special_time: reboot
+        job: "/usr/sbin/netplan apply"
+    - name: apply netplan
+      command: netplan apply
+      async: 45
+      poll: 0
+      check_mode: False

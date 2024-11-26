@@ -1,0 +1,147 @@
+network:
+    vrfs:
+        {{ vrf.mgmt.name }}:
+            table: {{ vrf.mgmt.id }}
+            interfaces:
+            {%- if dedicated_mgmt_nic is defined and dedicated_mgmt_nic is sameas true %}
+            - ens192
+            {%- else %}
+            - enp19s0
+            - enp27s0
+            {%- endif %}
+        {{ vrf.overlay.name }}:
+            table: {{ vrf.overlay.id }}
+            interfaces:
+            - enp19s0.{{ vlan.overlay_a.id }}
+            - enp27s0.{{ vlan.overlay_b.id }}
+    dummy-devices:
+        bgp-router:
+            addresses:
+            - {{ bgp_ip }}/32
+            link-local: []
+            mtu: 9000
+        dummy-ex:
+            link-local: []
+            mtu: 9000
+    bridges:
+        br-ex:
+            interfaces:
+            - dummy-ex
+            mtu: 9000
+            link-local: []
+            parameters:
+                forward-delay: 15
+                stp: false
+            nameservers:
+                addresses:
+                - {{ nameserver.maas }}
+                - {{ nameserver.resolver }}
+                search:
+                {%- for domain in nameserver.search %}
+                - {{ domain }}
+                {%- endfor %}
+    vlans:
+        enp19s0.179:
+            mtu: 9000
+            id: 179
+            {%- if dedicated_mgmt_nic is defined and dedicated_mgmt_nic is sameas true %}
+            link: "ens224"
+            {%- else %}
+            link: "ens192"
+            {%- endif %}
+        enp27s0.180:
+            mtu: 9000
+            id: 180
+            {%- if dedicated_mgmt_nic is defined and dedicated_mgmt_nic is sameas true %}
+            link: "ens256"
+            {%- else %}
+            link: "ens224"
+            {%- endif %}
+        enp19s0.181:
+            mtu: 9000
+            id: 181
+            {%- if dedicated_mgmt_nic is defined and dedicated_mgmt_nic is sameas true %}
+            link: "ens224"
+            {%- else %}
+            link: "ens192"
+            {%- endif %}
+        enp27s0.182:
+            mtu: 9000
+            id: 182
+            {%- if dedicated_mgmt_nic is defined and dedicated_mgmt_nic is sameas true %}
+            link: "ens256"
+            {%- else %}
+            link: "ens224"
+            {%- endif %}
+    ethernets:
+        lo:
+            match:
+                name: lo
+            addresses:
+            - 127.0.0.1/8
+            - ::1/128
+        {%- if dedicated_mgmt_nic is defined and dedicated_mgmt_nic is sameas true %}
+        ens192:
+            addresses:
+            - {{ ansible_host }}/{{ subnet.maas.mask }}
+            gateway4: {{ subnet.maas.gateway }}
+            match:
+                macaddress:  {{ ansible_ens192.macaddress }}
+            mtu: 1500
+            nameservers:
+                addresses:
+                - {{ nameserver.maas }}
+                search:
+                - maas
+            set-name: ens192
+        ens224:
+            match:
+                {%- if ansible_ens224 is defined %}
+                macaddress:  {{ ansible_ens224.macaddress }}
+                {%- else %}
+                macaddress:  {{ ansible_enp19s0.macaddress }}
+                {% endif %}
+            mtu: 9000
+            optional: true
+            set-name: enp19s0
+        ens256:
+            match:
+                {%- if ansible_ens256 is defined %}
+                macaddress:  {{ ansible_ens256.macaddress }}
+                {%- else %}
+                macaddress:  {{ ansible_enp27s0.macaddress }}
+                {% endif %}
+            mtu: 9000
+            optional: true
+            set-name: enp27s0
+        {%- else %}
+        ens192:
+            addresses:
+            - {{ ansible_host }}/{{ subnet.maas.mask }}
+            gateway4: {{ subnet.maas.gateway }}
+            match:
+                {%- if ansible_ens192 is defined %}
+                macaddress:  {{ ansible_ens192.macaddress }}
+                {%- else %}
+                macaddress:  {{ ansible_enp19s0.macaddress }}
+                {% endif %}
+            mtu: 9000
+            optional: true
+            set-name: enp19s0
+            nameservers:
+                addresses:
+                - {{ nameserver.maas }}
+                search:
+                - maas
+        ens224:
+            match:
+                {%- if ansible_ens224 is defined %}
+                macaddress:  {{ ansible_ens224.macaddress }}
+                {%- else %}
+                macaddress:  {{ ansible_enp27s0.macaddress }}
+                {% endif %}
+            mtu: 9000
+            optional: true
+            set-name: enp27s0
+        {%- endif %}
+    version: 2

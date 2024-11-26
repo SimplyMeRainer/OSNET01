@@ -1,0 +1,10 @@
+- name: netplan
+  tags:
+    - mtu
+  block:
+    - name: render mtu configuration for compute
+      ansible.builtin.template:
+         src: default.j2
+         dest: /usr/lib/systemd/network/99-default.link
+         trim_blocks: false
+      when: "'compute' in group_names"

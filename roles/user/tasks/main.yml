@@ -1,0 +1,21 @@
+---
+- name: user
+  tags:
+    - user
+  block:
+    - name: Create local neteng user
+      user:
+        name: neteng
+        password: "{{ lookup('env', 'OS_NETENG_PW') | password_hash('sha512') }}"
+        shell: /bin/bash
+        state: present
+    - name: Add neteng to sudo group
+      user:
+        name: neteng
+        groups: sudo
+    - name: Allow passwordless sudo for neteng
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^neteng'
+        line: 'neteng ALL=(ALL) NOPASSWD:ALL'

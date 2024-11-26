@@ -1,0 +1,80 @@
+[tool.poetry]
+name = "osnet"
+version = "0.1.0"
+description = "Network Engineering Ansible Automation"
+authors = ["Anthony Timmins <anthony.timmins@crowdstrike.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ansible = "^8.0.0"
+ansible-core = "^2.15.3"
+ansible-pylibssh = "1.1.0"
+bcrypt = "4.0.1"
+certifi = "2022.9.24"
+cffi = "^1"
+charset-normalizer = "2.1.1"
+cryptography = "38.0.1"
+idna = "3.4"
+jinja2 = "3.1.2"
+lxml = "5.2.2"
+ncclient = "0.6.15"
+packaging = "^24"
+paramiko = "2.11.0"
+pycparser = "2.21"
+pynacl = "1.5.0"
+pyparsing = "3.0.9"
+pyyaml = "6.0.1"
+requests = "^2.30.0"
+resolvelib = "0.8.1"
+six = "1.16.0"
+urllib3 = "1.26.12"
+pynautobot = "1.4.0"
+netaddr = "^1.3"
+python-dotenv = "^1.0.1"
+boto3 = "^1.34.162"
+deepmerge = "^1.1.1"
+xmltodict = "^0.13.0"
+dnspython = "^2.6.1"
+click = "^8.1.7"
+nornir = "^3.4.1"
+nornir-netmiko = "^1.0.1"
+nornir-nautobot = "2.7.0"
+rich = "^13.9.2"
+passlib = "^1.7.4"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+black = "24.3.0"
+flake8 = "7.0.0"
+poetry = "^1.8.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+force-exclude = '''
+/(
+    filter_plugins/asn_converter.py
+  | roles/common/network/module_utils/cs_connection.py
+  | generate_inventory.py
+)
+'''

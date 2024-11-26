@@ -1,0 +1,16 @@
+---
+- name: Provision
+  hosts: all
+  gather_facts: true
+  gather_subset:
+    - "network"
+    - "!all"
+    - "!min"
+  become: true
+  roles:
+    - sysctl
+    - user
+    - frr
+    - netplan
+    - mtu
+    - ovn-bgp-agent

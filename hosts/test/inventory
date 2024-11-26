@@ -1,0 +1,65 @@
+---
+all:
+  vars:
+    ansible_user: ubuntu
+    ansible_python_interpreter: /usr/bin/python3
+  children:
+    overlay:
+      children:
+        compute:
+          hosts:
+            i02-compute01.maas:
+              ansible_host: 10.184.91.15
+              bgp_ip: 10.184.88.36
+              dedicated_mgmt_nic: True
+            i02-compute02.maas:
+              ansible_host: 10.184.91.12
+              bgp_ip: 10.184.88.46
+              dedicated_mgmt_nic: True
+            i02-compute3.maas:
+              ansible_host: 10.184.91.13
+              bgp_ip: 10.184.88.47
+    underlay:
+      children:
+        controller:
+          hosts:
+            i02-node01.maas:
+              ansible_host: 10.184.91.5
+              bgp_ip: 10.184.88.40
+              dedicated_mgmt_nic: True
+            i02-node02.maas:
+              ansible_host: 10.184.91.3
+              bgp_ip: 10.184.88.39
+              dedicated_mgmt_nic: True
+            i02-node03.maas:
+              ansible_host: 10.184.91.4
+              bgp_ip: 10.184.88.38
+              dedicated_mgmt_nic: True
+            i02-node04.maas:
+              ansible_host: 10.184.91.44
+              bgp_ip: 10.184.88.37
+              dedicated_mgmt_nic: True
+        juju:
+          hosts:
+            i02-control.maas:
+              ansible_host: 10.184.91.30
+              bgp_ip: 10.184.88.41
+              dedicated_mgmt_nic: True
+        storage:
+          hosts:
+            i02-ceph1.maas:
+              ansible_host: 10.184.91.9
+              bgp_ip: 10.184.88.42
+              dedicated_mgmt_nic: True
+            i02-ceph2.maas:
+              ansible_host: 10.184.91.42
+              bgp_ip: 10.184.88.43
+              dedicated_mgmt_nic: True
+            i02-ceph3.maas:
+              ansible_host: 10.184.91.7
+              bgp_ip: 10.184.88.44
+              dedicated_mgmt_nic: True
+            i02-ceph4.maas:
+              ansible_host: 10.184.91.31
+              bgp_ip: 10.184.88.45
+              dedicated_mgmt_nic: True

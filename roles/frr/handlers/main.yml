@@ -1,0 +1,6 @@
+---
+- name: restart FRR service
+  systemd:
+    name: frr
+    state: restarted
+    enabled: yes

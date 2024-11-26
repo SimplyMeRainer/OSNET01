@@ -1,0 +1,50 @@
+---
+asn:
+  host: 40000004
+  vm: 41000000
+subnet:
+  control_plane:
+    gateway: 10.184.88.193
+    anycast: fc:bd:de:da:db:0d
+    network: 10.184.88.192
+    mask: 26
+  maas:
+    gateway: 10.184.91.1
+    network: 10.184.91.0
+    mask: 26
+community:
+  bgp: 65534:65099
+  host: 65534:65098
+frr:
+  repo:
+    url: "https://deb.frrouting.org/frr"
+  version: "frr-10.1"
+  version_long: "10.1.1"
+proxy:
+  http: http://172.18.128.0:3128
+ovn:
+  central:
+    - 10.184.88.229
+    - 10.184.88.230
+    - 10.184.88.233
+vlan:
+  overlay_a:
+    id: 179
+  overlay_b:
+    id: 180
+  underlay_a:
+    id: 181
+  underlay_b:
+    id: 182
+vrf:
+  mgmt:
+    name: mgmt
+    id: 10
+  overlay:
+    name: vrf-5001
+    id: 5001
+nameserver:
+  maas: 10.184.91.2
+  resolver: 10.184.90.20
+  search:
+    - lab1.dc

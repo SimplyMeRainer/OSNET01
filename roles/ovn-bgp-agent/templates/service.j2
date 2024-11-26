@@ -1,0 +1,17 @@
+[Unit]
+Description = ovn-bgp-agent service
+After = network-online.target
+
+[Service]
+Type = simple
+User = root
+Group = root
+ExecStart = /usr/local/bin/ovn-bgp-agent --config-file /etc/ovn/bgp-agent.conf
+ExecReload = /bin/kill -HUP $MAINPID
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec = 10
+Restart = always
+RestartSec = 2
+
+[Install]
+WantedBy = multi-user.target

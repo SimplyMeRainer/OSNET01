@@ -1,0 +1,26 @@
+- name: ovn-bgp-agent
+  tags:
+    - ovn-bgp-agent
+  block:
+    - name: install ovn-bgp-agent pip package
+      ansible.builtin.pip:
+        name: ovn-bgp-agent
+        executable: pip3
+      environment:
+        http_proxy: "{{ proxy.http }}"
+    - name: render ovn-bgp-agent configuration
+      ansible.builtin.template:
+         src: conf.j2
+         dest: /etc/ovn/bgp-agent.conf
+         trim_blocks: false
+    - name: render ovn-bgp-agent systemd service
+      ansible.builtin.template:
+         src: service.j2
+         dest: /lib/systemd/system/ovn-bgp-agent.service
+         trim_blocks: false
+    - name: enable and start ovn-bgp-agent
+      ansible.builtin.systemd_service:
+        name: ovn-bgp-agent
+        state: started
+        enabled: true
+  when: "'compute' in group_names"

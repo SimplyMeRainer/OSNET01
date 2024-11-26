@@ -1,0 +1,152 @@
+frr version {{ frr.version_long }}
+frr defaults traditional
+hostname {{ inventory_hostname }}
+log syslog informational
+service integrated-vtysh-config
+!
+ip prefix-list BGP-ROUTER seq 5 permit {{ bgp_ip }}/32
+ip prefix-list DEFAULT seq 5 permit 0.0.0.0/0
+!
+vrf {{ vrf.overlay.name }}
+ vni {{ vrf.overlay.id }}
+exit-vrf
+!
+vrf {{ vrf.mgmt.name }}
+exit-vrf
+!
+router bgp {{ asn.host }}
+ bgp router-id {{ bgp_ip }}
+ bgp log-neighbor-changes
+ no bgp ebgp-requires-policy
+ no bgp enforce-first-as
+ no bgp hard-administrative-reset
+ no bgp default ipv4-unicast
+ no bgp graceful-restart notification
+ bgp graceful-restart
+ bgp graceful-restart preserve-fw-state
+ bgp bestpath as-path multipath-relax
+ no bgp network import-check
+ timers bgp 3 9
+ neighbor LEAF peer-group
+ neighbor LEAF remote-as external
+ neighbor LEAF bfd
+ neighbor LEAF capability extended-nexthop
+ neighbor enp19s0.{{ vlan.underlay_a.id }} interface peer-group LEAF
+ neighbor enp27s0.{{ vlan.underlay_b.id }} interface peer-group LEAF
+ !
+ address-family ipv4 unicast
+  network {{ bgp_ip }}/32
+  redistribute connected route-map UNDERLAY-REDIS
+  neighbor LEAF activate
+  neighbor LEAF soft-reconfiguration inbound
+  neighbor LEAF allowas-in 1
+  neighbor LEAF route-map UNDERLAY-IN in
+  neighbor LEAF route-map UNDERLAY-OUT out
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  redistribute connected
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  advertise-all-vni
+  advertise-svi-ip
+ exit-address-family
+ vrf-policy overlay
+ exit-vrf-policy
+ vnc defaults
+ exit-vnc
+exit
+!
+router bgp {{ asn.host }} vrf {{ vrf.overlay.name }}
+ bgp router-id {{ bgp_ip }}
+ bgp log-neighbor-changes
+ no bgp ebgp-requires-policy
+ no bgp enforce-first-as
+ no bgp hard-administrative-reset
+ no bgp default ipv4-unicast
+ no bgp graceful-restart notification
+ bgp graceful-restart
+ bgp graceful-restart preserve-fw-state
+ bgp bestpath as-path multipath-relax
+ no bgp network import-check
+ timers bgp 3 9
+ neighbor LEAF peer-group
+ neighbor LEAF remote-as external
+ neighbor LEAF bfd
+ neighbor LEAF capability extended-nexthop
+ neighbor VM peer-group
+ neighbor VM remote-as {{ asn.vm }}
+ neighbor VM bfd
+ neighbor VM ttl-security hops 1
+ neighbor VM disable-connected-check
+ neighbor VM capability extended-nexthop
+ neighbor enp19s0.{{ vlan.overlay_a.id }} interface peer-group LEAF
+ neighbor enp27s0.{{ vlan.overlay_b.id }} interface peer-group LEAF
+ bgp listen range 0.0.0.0/0 peer-group VM
+ !
+ address-family ipv4 unicast
+  redistribute kernel route-map OVERLAY-REDIS
+  redistribute connected route-map OVERLAY-REDIS
+  neighbor LEAF activate
+  neighbor LEAF soft-reconfiguration inbound
+  neighbor LEAF route-map OVERLAY-IN in
+  neighbor LEAF route-map OVERLAY-OUT out
+  neighbor VM activate
+  neighbor VM soft-reconfiguration inbound
+  neighbor VM maximum-prefix 1
+  neighbor VM route-map VM-IN in
+  neighbor VM route-map DENY-ALL out
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  redistribute kernel
+  redistribute connected
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  advertise ipv4 unicast
+  advertise ipv6 unicast
+  rd {{ bgp_ip }}:{{ vrf.overlay.id }}
+ exit-address-family
+exit
+!
+bgp community-list standard HOST-ROUTES seq 5 permit {{ community.host }}
+bgp community-list standard BGP-ROUTERS seq 5 permit {{ community.bgp }}
+!
+route-map OVERLAY-OUT permit 10
+ match community HOST-ROUTES
+exit
+!
+route-map OVERLAY-REDIS permit 10
+ set community {{ community.host }}
+exit
+!
+route-map OVERLAY-IN permit 10
+ match ip address prefix-list DEFAULT
+ set community no-export
+exit
+!
+route-map UNDERLAY-OUT permit 10
+ match ip address prefix-list BGP-ROUTER
+ set community {{ community.bgp }}
+exit
+!
+route-map UNDERLAY-IN permit 10
+ match ip address prefix-list DEFAULT
+ set community no-export
+exit
+!
+route-map UNDERLAY-IN permit 20
+ match community BGP-ROUTERS
+ set community no-export
+exit
+!
+route-map VM-IN permit 10
+ match community HOST-ROUTES
+ match ip address prefix-len 32
+exit
+!
+route-map DENY-ALL deny 10
+exit
+!
